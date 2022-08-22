@@ -45,7 +45,14 @@ namespace ScottPlot.Avalonia
         {
             base.Render(context);
 
-            SKImageInfo imageInfo = new((int)Bounds.Width, (int)Bounds.Height);
+            const double M1_MAC_DPI = 254.0;
+            const double DEFAULT_DPI = 96.0;
+            var scaleFactor = M1_MAC_DPI / DEFAULT_DPI;
+
+            var scaledW = (int)(Bounds.Width * scaleFactor);
+            var scaledH = (int)(Bounds.Height * scaleFactor);
+
+            SKImageInfo imageInfo = new(scaledW, scaledH);
 
             using var surface = SKSurface.Create(imageInfo);
             if (surface is null)
@@ -59,7 +66,7 @@ namespace ScottPlot.Avalonia
             byte[] bytes = pixels.GetPixelSpan().ToArray();
 
             using WriteableBitmap bmp = new(
-                size: new global::Avalonia.PixelSize((int)Bounds.Width, (int)Bounds.Height),
+                size: new global::Avalonia.PixelSize(scaledW, scaledH),
                 dpi: new Vector(1, 1),
                 format: PixelFormat.Bgra8888,
                 alphaFormat: AlphaFormat.Unpremul);
@@ -69,9 +76,10 @@ namespace ScottPlot.Avalonia
                 Marshal.Copy(bytes, 0, buf.Address, pixels.BytesSize);
             }
 
-            Rect rect = new(0, 0, Bounds.Width, Bounds.Height);
+            Rect rect = new(0, 0, scaledW, scaledH);
+            Rect rect2 = new(0, 0, (int)Bounds.Width , (int)Bounds.Height);
 
-            context.DrawImage(bmp, rect, rect, BitmapInterpolationMode.HighQuality);
+            context.DrawImage(bmp, rect, rect2, BitmapInterpolationMode.HighQuality);
         }
 
         public void Refresh()
